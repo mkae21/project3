@@ -1,15 +1,21 @@
-const express = require('express');
-const customerRoute = require('./routes/customers');
-const productRoute = require('./routes/product');
-const app = express()
+const express = require("express");
+const app = express();
 
-app.use(express.json({
-    limit:'50mb'
-}));// 클라이언트 요청 body를 json으로 파싱 처리
+app.use(
+  express.json({
+    limit: "50mb",
+  })
+);
+
+app.get("/", function (req, res) {
+  res.send("get으로 /요청에대한 답장");
+});
+
+app.post("/customer", (req, res) => {
+  res.send(req.body.param);
+  console.log("post으로 /customer에 요청에 대한 답장");
+});
 
 app.listen(3000,()=>{
-    console.log('Server started. port 3000.')
+    console.log("서버 실행")
 })
-
-app.use('/customer',customerRoute); //cutomer 라우트를 추가하고 기본경로 /customer로 설정
-app.use('/product',productRoute);// product 라우트 추가 및 기본경로 /product로 설정
