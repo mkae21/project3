@@ -22,6 +22,6 @@ const project3Schema = new Schema({
 })
 
 
-const project3 = mongoose.model('project3',project3Schema)
+const Project3 = mongoose.model('Project3',project3Schema)
 
-module.exports = project3
+module.exports = Project3
