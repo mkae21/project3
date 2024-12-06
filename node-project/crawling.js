@@ -6,7 +6,6 @@ const app = express();
 const mongoose = require('mongoose')
 const mongodb = require('./mongoose/index')
 const Jobs = require('./mongoose/schemas/Job'); //db 모델
-const Job = require('./mongoose/schemas/Job');
 
 const PORT = 443;
 
@@ -138,8 +137,6 @@ const startServer = async () => {
         console.error('서버 시작 실패', error.message);
     }
 };
-
-
 
 
 startServer();
