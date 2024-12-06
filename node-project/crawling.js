@@ -5,7 +5,8 @@ const fs = require('fs');
 const app = express();
 const mongoose = require('mongoose')
 const mongodb = require('./mongoose/index')
-const Jobs = require('./mongoose/schemas/Job') //db 모델
+const Jobs = require('./mongoose/schemas/Job'); //db 모델
+const Job = require('./mongoose/schemas/Job');
 
 const PORT = 443;
 
@@ -16,9 +17,8 @@ const PORT = 443;
  * @param {number} pages - 크롤링할 페이지 수
  * @returns {Promise<Array>} 채용공고 정보가 담긴 배열
  */
-
-const crawlSaramin = async (keyword, pages = 1) => {
-    const jobs = []; //저장할 배열
+const crawlSaramin = async (keyword, pages = 1, maxRetries = 3) => {
+    const jobs = []; // 저장할 배열
     const headers = {
         'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -29,90 +29,73 @@ const crawlSaramin = async (keyword, pages = 1) => {
             keyword
         )}&recruitPage=${page}`;
 
-        try {
-            const response = await axios.get(url, { headers });
-            const $ = cheerio.load(response.data);
+        let attempt = 0;
+        let success = false;
 
-            // 채용공고 목록 가져오기
-            $('.item_recruit').each((index, element) => {
-                try {
-                    const company = $(element).find('.corp_name a').text().trim();
-                    const title = $(element).find('.job_tit a').text().trim();
-                    const link =
-                        'https://www.saramin.co.kr' +
-                        $(element).find('.job_tit a').attr('href');
-                    const conditions = $(element).find('.job_condition span');
-                    const location = $(conditions[0]).text().trim() || '';
-                    const experience = $(conditions[1]).text().trim() || '';
-                    const education = $(conditions[2]).text().trim() || '';
-                    const employmentType = $(conditions[3]).text().trim() || '';
-                    const deadline = $(element)
-                        .find('.job_date .date')
-                        .text()
-                        .trim();
-                    const jobSector = $(element).find('.job_sector').text().trim() || '';
-                    const salaryBadge = $(element)
-                        .find('.area_badge .badge')
-                        .text()
-                        .trim();
-                    const salary = salaryBadge || '';
+        while (attempt < maxRetries && !success) {
+            try {
+                console.log(`페이지 ${page} 크롤링 시도: ${attempt + 1}/${maxRetries}`);
+                const response = await axios.get(url, { headers });
+                const $ = cheerio.load(response.data);
 
-                    jobs.push({
-                        회사명: company,
-                        제목: title,
-                        링크: link,
-                        지역: location,
-                        경력: experience,
-                        학력: education,
-                        고용형태: employmentType,
-                        마감일: deadline,
-                        직무분야: jobSector,
-                        연봉정보: salary,
-                    });
-                } catch (error) {
-                    console.error('항목 파싱 중 에러 발생:', error.message);
+                // 채용공고 목록 가져오기
+                $('.item_recruit').each((index, element) => {
+                    try {
+                        const company = $(element).find('.corp_name a').text().trim();
+                        const title = $(element).find('.job_tit a').text().trim();
+                        const link =
+                            'https://www.saramin.co.kr' +
+                            $(element).find('.job_tit a').attr('href');
+                        const conditions = $(element).find('.job_condition span');
+                        const location = $(conditions[0]).text().trim() || '';
+                        const experience = $(conditions[1]).text().trim() || '';
+                        const education = $(conditions[2]).text().trim() || '';
+                        const employmentType = $(conditions[3]).text().trim() || '';
+                        const deadline = $(element)
+                            .find('.job_date .date')
+                            .text()
+                            .trim();
+                        const jobSector = $(element).find('.job_sector').text().trim() || '';
+                        const salaryBadge = $(element)
+                            .find('.area_badge .badge')
+                            .text()
+                            .trim();
+                        const salary = salaryBadge || '';
+
+                        jobs.push({
+                            회사명: company,
+                            제목: title,
+                            링크: link,
+                            지역: location,
+                            경력: experience,
+                            학력: education,
+                            고용형태: employmentType,
+                            마감일: deadline,
+                            직무분야: jobSector,
+                            연봉정보: salary,
+                        });
+                    } catch (error) {
+                        console.error('항목 파싱 중 에러 발생:', error.message);
+                    }
+                });
+
+                console.log(`${page} 페이지 크롤링 완료`);
+                success = true; // 크롤링 성공 시 루프 종료
+            } catch (error) {
+                attempt++;
+                console.error(`페이지 ${page} 요청 실패 (시도 ${attempt}/${maxRetries}):`, error.message);
+
+                if (attempt >= maxRetries) {
+                    console.error(`페이지 ${page} 크롤링 포기`);
                 }
-            });
-
-            console.log(`${page}페이지 크롤링 완료`);
-        } catch (error) {
-            console.error('페이지 요청 중 에러 발생:', error.message);
+            }
         }
     }
 
     return jobs;
 };
 
-// 라우트 설정
-// app.get('/saramin', async (req, res) => {
-//     const keyword = req.query.keyword || 'express';
-//     const pages = parseInt(req.query.pages) || 1;
 
-//     try {
-//         const jobs = await crawlSaramin(keyword, pages);
-
-//         for(const job of jobs){
-//             const newJob = new Jobs(job)
-//             await newJob.save()
-//         }
-//         res.json(jobs);
-
-//         // 결과를 CSV 파일로 저장 (옵션)
-//         const csvContent =
-//             '회사명,제목,링크,지역,경력,학력,고용형태,마감일,직무분야,연봉정보\n' +
-//             jobs
-//                 .map((job) =>
-//                     Object.values(job)
-//                         .map((value) => `"${value.replace(/"/g, '""')}"`)
-//                         .join(',')
-//                 )
-//                 .join('\n');
-//         fs.writeFileSync('saramin_jobs.csv', csvContent);
-//     } catch (error) {
-//         console.error('크롤링 중 에러 발생:', error.message);
-//         res.status(500).json({ error: '크롤링 중 문제가 발생했습니다.' });
-//     }
-// });
 
 
 const startServer = async () => {
@@ -125,7 +108,7 @@ const startServer = async () => {
         const collections = await mongoose.connection.db.listCollections().toArray();
         const collectionNames = collections.map((col) => col.name);
 
-        const keyword = 'python';
+        const keyword = '개발';
         const pages = 1;
         const jobs = await crawlSaramin(keyword, pages);
 
@@ -138,6 +121,7 @@ const startServer = async () => {
 
         }else{
             console.log('Job 컬렉션이 이미 존재');
+
             //중복 데이터 처리
             const bulkOperations = jobs.map((job) => ({
                 updateOne: {
@@ -155,8 +139,11 @@ const startServer = async () => {
     }
 };
 
+
+
+
 startServer();
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`Server is running on http://113.198.66.75:${PORT}`);
 });
