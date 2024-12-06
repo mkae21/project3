@@ -1,6 +1,8 @@
 const express = require("express");
 const app = express();
 
+const PORT = process.env.PORT || 443;
+
 app.use(
   express.json({
     limit: "50mb",
@@ -16,6 +18,6 @@ app.post("/customer", (req, res) => {
   console.log("post으로 /customer에 요청에 대한 답장");
 });
 
-app.listen(3000,()=>{
+app.listen(PORT,()=>{
     console.log("서버 실행")
 })

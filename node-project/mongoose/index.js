@@ -6,10 +6,10 @@ const connect = async () => {
     }
 
     try {
-        await mongoose.connect('mongodb://root:1234@localhost:27017/admin', {
+        await mongoose.connect('mongodb://bbuchu123:753159@113.198.66.75:13114/admin', {
             dbName: 'dev', // 사용할 데이터베이스 이름
         });
-        console.log("MongoDB 연결 성공: localhost:27017/admin");
+        console.log("MongoDB 연결 성공: 113.198.66.75:13114/admin");
     } catch (error) {
         console.error("MongoDB 연결 에러:", error);
     }
