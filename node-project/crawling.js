@@ -108,7 +108,6 @@ const startServer = async () => {
         const collectionNames = collections.map((col) => col.name);
 
         const keyword = '개발';
-        const pages = 1;
         const jobs = await crawlSaramin(keyword, pages);
 
         //최초 db 저장시
