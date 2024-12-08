@@ -16,7 +16,7 @@ const PORT = 443;
  * @param {number} pages - 크롤링할 페이지 수
  * @returns {Promise<Array>} 채용공고 정보가 담긴 배열
  */
-const crawlSaramin = async (keyword, pages = 1, maxRetries = 3) => {
+const crawlSaramin = async (keyword, pages = 3, maxRetries = 3) => {
     const jobs = []; // 저장할 배열
     const headers = {
         'User-Agent':
