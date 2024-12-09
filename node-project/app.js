@@ -166,11 +166,11 @@ const crawlCompanyInfo = async (keyword, pages = 3, maxRetries = 3, interval = 2
             $('.item_corp').each((index, element) => {
                 try {
                     const companyName = $(element).find('.corp_name').text().trim() || ''; // 클래스 선택자 수정
-                    const establishmentDate = $(element).find('dl').eq(0).text().trim() || '';
-                    const ceoName = $(element).find('dl').eq(1).text().trim() || '';
-                    const industry = $(element).find('dl').eq(2).text().trim() || '';
-                    const financialInfo = $(element).find('dl').eq(3).text().trim() || '';
-                    const companyAddress = $(element).find('dl').eq(4).text().trim() || '';
+                    const establishmentDate = $(element).find('dd').eq(0).text().trim() || '';
+                    const ceoName = $(element).find('dd').eq(1).text().trim() || '';
+                    const industry = $(element).find('dd').eq(2).text().trim() || '';
+                    const financialInfo = $(element).find('dd').eq(3).text().trim() || '';
+                    const companyAddress = $(element).find('dd').eq(4).text().trim() || '';
 
                     companies.push({
                         회사명: companyName,
@@ -215,7 +215,7 @@ const startServer = async () => {
 
         // 채용 공고 크롤링 및 업데이트
         // const jobs = await crawlRecruitInfo(keyword, pages, 3, interval);
-        const companies = await crawlCompanyInfo(keyword,pages,6,interval);
+        const companies = await crawlCompanyInfo(keyword,pages,3,interval);
         // 중복 데이터 방지 및 업데이트
         // await bulkUpdate(Jobs, jobs, '링크'); // '링크'를 고유 식별자로 사용하여 중복 방지
         await bulkUpdate(Companys,companies,'회사주소')
