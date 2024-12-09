@@ -4,6 +4,7 @@ const cheerio = require('cheerio');
 const mongoose = require('mongoose');
 const mongodb = require('./mongoose/index');
 const Jobs = require('./mongoose/schemas/Job'); // 채용 공고 정보 모델
+const Companys = require('./mongoose/schemas/Company'); // 회사 정보 모델
 
 const app = express();
 const PORT = 3000;
@@ -23,7 +24,6 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  * @returns {Promise<object>} - cheerio 객체와 HTML 데이터
  */
 const fetchPage = async (url, maxRetries = 3, headers = {}) => {
-
     const defaultHeaders = {
         'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -32,7 +32,7 @@ const fetchPage = async (url, maxRetries = 3, headers = {}) => {
     let attempt = 0;
     while (attempt < maxRetries) {
         try {
-            const response = await axios.get(url, { headers });
+            const response = await axios.get(url, { headers: { ...defaultHeaders, ...headers } });
             const $ = cheerio.load(response.data);
             return { $, html: response.data };
         } catch (error) {
@@ -79,7 +79,8 @@ const bulkUpdate = async (model, data, uniqueKey) => {
  * @param {number} interval - 페이지 간 대기 시간(ms)
  * @returns {Promise<Array>} 채용공고 정보 배열
  */
-const crawlSaramin = async (keyword, pages = 3, maxRetries = 3, interval = 2000) => {
+
+const crawlRecruitInfo = async (keyword, pages = 3, maxRetries = 3, interval = 2000) => {
     const jobs = [];
 
     for (let page = 1; page <= pages; page++) {
@@ -140,21 +141,64 @@ const crawlSaramin = async (keyword, pages = 3, maxRetries = 3, interval = 2000)
     return jobs;
 };
 
-// const crawlCompanyInfo = async (keyword, pages = 3, maxRetries = 3, interval = 2000) => {
-//   console.log("기업 정보 크롤링 시작")
-//   const company = []; //data 저장 할 배열
 
-//   for(let page; page<=pages; page++){
-//     const url = `https://www.saramin.co.kr/zf_user/search/recruit?searchType=search&searchword=${encodeURIComponent(
-//       keyword
-//     )}&recruitPage=${page}`;
-//     console.log(`페이지 ${page} 크롤링 시작...`);
-//     const { $ } = await fetchPage(url, maxRetries, headers);
+/**
+ * 기업 정보 크롤링 함수
+ * @param {string} keyword - 검색할 키워드
+ * @param {number} pages - 크롤링할 페이지 수
+ * @param {number} maxRetries - 최대 재시도 횟수
+ * @param {number} interval - 페이지 간 대기 시간(ms)
+ * @returns {Promise<Array>} 회사 정보 배열
+ */
+const crawlCompanyInfo = async (keyword, pages = 3, maxRetries = 3, interval = 2000) => {
+    console.log("기업 정보 크롤링 시작");
+    const companies = []; // 데이터 저장 배열
 
+    for (let page = 1; page <= pages; page++) {
+        try {
+            const url = `https://www.saramin.co.kr/zf_user/search/company?searchword=${encodeURIComponent(
+                keyword
+            )}&page=${page}&searchType=recently&pageCount=10&mainSearch=n`;
 
-//   }
+            console.log(`페이지 ${page} 크롤링 시작...`);
+            const { $ } = await fetchPage(url, maxRetries);
 
-// }
+            $('.item_corp').each((index, element) => {
+                try {
+                    const companyName = $(element).find('.corp_name').text().trim() || ''; // 클래스 선택자 수정
+                    const establishmentDate = $(element).find('dl').eq(0).text().trim() || '';
+                    const ceoName = $(element).find('dl').eq(1).text().trim() || '';
+                    const industry = $(element).find('dl').eq(2).text().trim() || '';
+                    const financialInfo = $(element).find('dl').eq(3).text().trim() || '';
+                    const companyAddress = $(element).find('dl').eq(4).text().trim() || '';
+
+                    companies.push({
+                        회사명: companyName,
+                        설립일: establishmentDate,
+                        설립자: ceoName,
+                        업종: industry,
+                        재정정보: financialInfo,
+                        회사주소: companyAddress,
+                    });
+                } catch (error) {
+                    console.error('항목 파싱 중 에러 발생:', error.message);
+                }
+            });
+
+            console.log(`페이지 ${page} 크롤링 완료`);
+            if (page < pages) {
+                console.log(`다음 페이지 요청 전 ${interval}ms 대기 중...`);
+                await delay(interval); // 대기
+            }
+        } catch (error) {
+            console.error(`페이지 ${page} 크롤링 실패:`, error.message);
+        }
+    }
+
+    console.log('크롤링된 회사 데이터:', companies);
+    return companies;
+};
+
 
 /**
  * 서버 시작 함수
@@ -165,26 +209,18 @@ const startServer = async () => {
         console.log('DB 연결 성공');
         console.log('MongoDB 상태:', mongoose.connection.readyState); // 1이면 연결 성공
 
-        const collections = await mongoose.connection.db.listCollections().toArray();
-        const collectionNames = collections.map((col) => col.name);
-
         const keyword = '개발';
         const pages = 3;
-        const interval = 2000; // 3초 대기
+        const interval = 3000; // 3초 대기
 
         // 채용 공고 크롤링 및 업데이트
-        const jobs = await crawlSaramin(keyword, pages, 3, interval);
-        if (!collectionNames.includes('recuritInfo')) {
-            console.log('채용정보 컬렉션이 존재하지 않음, 생성 중...');
-            await Jobs.createCollection();
-            await Jobs.insertMany(jobs);
-            console.log('데이터 저장 완료');
-        } else {
-            console.log('채용정보 컬렉션이 이미 존재');
-            await bulkUpdate(Jobs, jobs, '링크'); // '링크'를 고유 식별자로 사용
-        }
+        // const jobs = await crawlRecruitInfo(keyword, pages, 3, interval);
+        const companies = await crawlCompanyInfo(keyword,pages,6,interval);
+        // 중복 데이터 방지 및 업데이트
+        // await bulkUpdate(Jobs, jobs, '링크'); // '링크'를 고유 식별자로 사용하여 중복 방지
+        await bulkUpdate(Companys,companies,'회사주소')
 
-
+        console.log('취업 정보 저장 완료');
     } catch (error) {
         console.error('서버 시작 실패:', error.message);
     }
