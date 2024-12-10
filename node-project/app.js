@@ -142,62 +142,62 @@ const crawlRecruitInfo = async (keyword, pages = 3, maxRetries = 3, interval = 2
 };
 
 
-/**
- * 기업 정보 크롤링 함수
- * @param {string} keyword - 검색할 키워드
- * @param {number} pages - 크롤링할 페이지 수
- * @param {number} maxRetries - 최대 재시도 횟수
- * @param {number} interval - 페이지 간 대기 시간(ms)
- * @returns {Promise<Array>} 회사 정보 배열
- */
-const crawlCompanyInfo = async (keyword, pages = 3, maxRetries = 3, interval = 2000) => {
-    console.log("기업 정보 크롤링 시작");
-    const companies = []; // 데이터 저장 배열
+// /**
+//  * 기업 정보 크롤링 함수
+//  * @param {string} keyword - 검색할 키워드
+//  * @param {number} pages - 크롤링할 페이지 수
+//  * @param {number} maxRetries - 최대 재시도 횟수
+//  * @param {number} interval - 페이지 간 대기 시간(ms)
+//  * @returns {Promise<Array>} 회사 정보 배열
+//  */
+// const crawlCompanyInfo = async (keyword, pages = 3, maxRetries = 3, interval = 2000) => {
+//     console.log("기업 정보 크롤링 시작");
+//     const companies = []; // 데이터 저장 배열
 
-    for (let page = 1; page <= pages; page++) {
-        try {
-            const url = `https://www.saramin.co.kr/zf_user/search/company?searchword=${encodeURIComponent(
-                keyword
-            )}&page=${page}&searchType=recently&pageCount=10&mainSearch=n`;
+//     for (let page = 1; page <= pages; page++) {
+//         try {
+//             const url = `https://www.saramin.co.kr/zf_user/search/company?searchword=${encodeURIComponent(
+//                 keyword
+//             )}&page=${page}&searchType=recently&pageCount=10&mainSearch=n`;
 
-            console.log(`페이지 ${page} 크롤링 시작...`);
-            const { $ } = await fetchPage(url, maxRetries);
+//             console.log(`페이지 ${page} 크롤링 시작...`);
+//             const { $ } = await fetchPage(url, maxRetries);
 
-            $('.item_corp').each((index, element) => {
-                try {
-                    const companyName = $(element).find('.corp_name').text().trim() || ''; // 클래스 선택자 수정
-                    const establishmentDate = $(element).find('dd').eq(0).text().trim() || '';
-                    const ceoName = $(element).find('dd').eq(1).text().trim() || '';
-                    const industry = $(element).find('dd').eq(2).text().trim() || '';
-                    const financialInfo = $(element).find('dd').eq(3).text().trim() || '';
-                    const companyAddress = $(element).find('dd').eq(4).text().trim() || '';
+//             $('.item_corp').each((index, element) => {
+//                 try {
+//                     const companyName = $(element).find('.corp_name').text().trim() || ''; // 클래스 선택자 수정
+//                     const establishmentDate = $(element).find('dd').eq(0).text().trim() || '';
+//                     const ceoName = $(element).find('dd').eq(1).text().trim() || '';
+//                     const industry = $(element).find('dd').eq(2).text().trim() || '';
+//                     const financialInfo = $(element).find('dd').eq(3).text().trim() || '';
+//                     const companyAddress = $(element).find('dd').eq(4).text().trim() || '';
 
-                    companies.push({
-                        회사명: companyName,
-                        설립일: establishmentDate,
-                        설립자: ceoName,
-                        업종: industry,
-                        재정정보: financialInfo,
-                        회사주소: companyAddress,
-                    });
-                } catch (error) {
-                    console.error('항목 파싱 중 에러 발생:', error.message);
-                }
-            });
+//                     companies.push({
+//                         회사명: companyName,
+//                         설립일: establishmentDate,
+//                         설립자: ceoName,
+//                         업종: industry,
+//                         재정정보: financialInfo,
+//                         회사주소: companyAddress,
+//                     });
+//                 } catch (error) {
+//                     console.error('항목 파싱 중 에러 발생:', error.message);
+//                 }
+//             });
 
-            console.log(`페이지 ${page} 크롤링 완료`);
-            if (page < pages) {
-                console.log(`다음 페이지 요청 전 ${interval}ms 대기 중...`);
-                await delay(interval); // 대기
-            }
-        } catch (error) {
-            console.error(`페이지 ${page} 크롤링 실패:`, error.message);
-        }
-    }
+//             console.log(`페이지 ${page} 크롤링 완료`);
+//             if (page < pages) {
+//                 console.log(`다음 페이지 요청 전 ${interval}ms 대기 중...`);
+//                 await delay(interval); // 대기
+//             }
+//         } catch (error) {
+//             console.error(`페이지 ${page} 크롤링 실패:`, error.message);
+//         }
+//     }
 
-    console.log('크롤링된 회사 데이터:', companies);
-    return companies;
-};
+//     console.log('크롤링된 회사 데이터:', companies);
+//     return companies;
+// };
 
 
 /**
@@ -214,11 +214,14 @@ const startServer = async () => {
         const interval = 3000; // 3초 대기
 
         // 채용 공고 크롤링 및 업데이트
-        // const jobs = await crawlRecruitInfo(keyword, pages, 3, interval);
-        const companies = await crawlCompanyInfo(keyword,pages,3,interval);
+
+        const jobs = await crawlRecruitInfo(keyword, pages, 3, interval);
+        // const companies = await crawlCompanyInfo(keyword,pages,3,interval);
+
         // 중복 데이터 방지 및 업데이트
-        // await bulkUpdate(Jobs, jobs, '링크'); // '링크'를 고유 식별자로 사용하여 중복 방지
-        await bulkUpdate(Companys,companies,'회사주소')
+
+        await bulkUpdate(Jobs, jobs, '링크'); // '링크'를 고유 식별자로 사용하여 중복 방지
+        // await bulkUpdate(Companys,companies,'회사주소')
 
         console.log('취업 정보 저장 완료');
     } catch (error) {
