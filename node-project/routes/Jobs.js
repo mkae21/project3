@@ -67,8 +67,43 @@ router.get('/', async (req, res) => {
     }
 });
 
-router.get('/:id'){
-    
-}
+router.get('/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // 1. 상세 정보 제공
+        const job = await Job.findById(id);
+
+        if (!job) {
+            return res.status(404).json({ status: 'error', message: '공고를 찾을 수 없습니다.' });
+        }
+
+        // 2. 조회수 증가
+        await Job.findByIdAndUpdate(id, { $inc: { views: 1 } });
+
+        // 3. 관련 공고 추천
+        const relatedJobs = await Job.find({
+            _id: { $ne: id }, // 현재 공고 제외
+            $or: [
+                { 직무분야: job.직무분야 }, // 동일 직무분야
+                { 지역: job.지역 }, // 동일 지역
+                { 회사명: job.회사명 }, // 동일 회사
+            ],
+        })
+            .limit(5); // 관련 공고 최대 5개
+
+        // 결과 반환
+        res.json({
+            status: 'success',
+            data: {
+                job, // 상세 공고 정보
+                relatedJobs, // 관련 공고 추천
+            },
+        });
+    } catch (err) {
+        console.error('Error:', err.message);
+        res.status(500).json({ status: 'error', message: '서버 오류 발생' });
+    }
+});
 
 module.exports = router;
