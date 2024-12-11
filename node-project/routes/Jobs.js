@@ -106,4 +106,56 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+//공고 추가
+router.post('/', async (req, res) => {
+    const { 제목, 회사명, 지역, 경력, 직무분야, 연봉정보,조회수 } = req.body;
+
+    try {
+        const newJob = new Job({ 제목, 회사명, 지역, 경력, 직무분야, 연봉정보 });
+        await newJob.save();
+        res.status(201).json({ status: 'success', data: newJob });
+    } catch (err) {
+        console.error('Error:', err.message);
+        res.status(500).json({ status: 'error', message: 'Server Error' });
+    }
+});
+
+//공고 수정
+router.put('/:id', async (req, res) => {
+    const { id } = req.params;
+    const updates = req.body;
+
+    try {
+        const updatedJob = await Job.findByIdAndUpdate(id, updates, { new: true });
+
+        if (!updatedJob) {
+            return res.status(404).json({ status: 'error', message: '공고를 찾을 수 없습니다.' });
+        }
+
+        res.json({ status: 'success', data: updatedJob });
+    } catch (err) {
+        console.error('Error:', err.message);
+        res.status(500).json({ status: 'error', message: 'Server Error' });
+    }
+});
+
+//공고 삭제
+router.delete('/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const deletedJob = await Job.findByIdAndDelete(id);
+
+        if (!deletedJob) {
+            return res.status(404).json({ status: 'error', message: '공고를 찾을 수 없습니다.' });
+        }
+
+        res.json({ status: 'success', message: '공고가 삭제되었습니다.' });
+    } catch (err) {
+        console.error('Error:', err.message);
+        res.status(500).json({ status: 'error', message: 'Server Error' });
+    }
+});
+
+
 module.exports = router;
