@@ -4,10 +4,9 @@ const cheerio = require('cheerio');
 const mongoose = require('mongoose');
 const mongodb = require('./mongoose/index');
 const Jobs = require('./mongoose/schemas/Job'); // 채용 공고 정보 모델
-const Companys = require('./mongoose/schemas/Company'); // 회사 정보 모델
 
 const app = express();
-const PORT = 3000;
+const PORT = 443;
 
 /**
  * 공통: 대기 함수
@@ -125,6 +124,7 @@ const crawlRecruitInfo = async (keyword, pages = 3, maxRetries = 3, interval = 2
                     마감일: deadline,
                     직무분야: jobSector,
                     연봉정보: salary,
+                    조회수: 0
                 });
             } catch (error) {
                 console.error('항목 파싱 중 에러 발생:', error.message);
