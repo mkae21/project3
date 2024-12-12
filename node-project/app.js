@@ -9,6 +9,7 @@ app.use(express.json()); // JSON 요청 데이터 처리
 
 // 채용 공고 관련 API
 app.use('/jobs', require('./routes/Jobs'));
+app.use('/auth',require('./routes/Auth'))
 
 // 서버 실행
 const PORT = 443;
