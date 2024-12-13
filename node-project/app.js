@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const mongodb = require('./mongoose/index');
-const mongoose = require('mongoose');
+require('dotenv').config(); // .env 파일 로드
 
 // MongoDB 연결
 mongodb.connect();
@@ -13,6 +13,8 @@ app.use('/auth',require('./routes/Auth'))
 
 // 서버 실행
 const PORT = 443;
+
+
 app.listen(PORT, () => {
     console.log(`REST API 서버가 ${PORT} 포트에서 시작되었습니다.`);
 });
