@@ -87,7 +87,7 @@ const crawlRecruitInfo = async (keyword, pages = 3, maxRetries = 3, interval = 2
             keyword
         )}&recruitPage=${page}`;
         console.log(`페이지 ${page} 크롤링 시작...`);
-        const { $ } = await fetchPage(url, maxRetries, headers);
+        const { $ } = await fetchPage(url, maxRetries);
 
         // 채용공고 목록 파싱
         $('.item_recruit').each((index, element) => {

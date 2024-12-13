@@ -57,7 +57,7 @@ const JobSchema = new mongoose.Schema({
     },
     조회수:{
         type: Number,
-        trim: true,
+        default:0
     }
 }, {
     timestamps: true, // 생성일(createdAt)과 수정일(updatedAt) 자동 추가
