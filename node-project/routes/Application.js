@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middlewares/auth'); // 인증 미들웨어
-const Application = require('../mongoose/schemas/Application');  // Application 모델
+const Application = require('../mongoose/schemas/User-Application');  // Application 모델
 
 
 // 지원 내역 조회
@@ -45,10 +45,20 @@ router.post('/', authMiddleware, async (req, res) => {
     try {
         const existingApplication = await Application.findOne({ userId, 링크 });
         if (existingApplication) {
-            return res.status(400).json({ status: 'error', message: '이미 해당 링크로 지원하셨습니다.' });
+            return res.status(400).json({ status: 'error', message: '이미 해당 회사를 지원하셨습니다.' });
         }
 
-        const newApplication = new Application({ userId, 회사명, 링크 });
+        // `지원자정보` 필드 추가
+        const newApplication = new Application({
+            userId,
+            회사명,
+            링크,
+            지원자정보: {
+                이메일: req.user.이메일, // authMiddleware에서 가져온 사용자 이메일
+                이름: req.user.이름,     // authMiddleware에서 가져온 사용자 이름
+            },
+        });
+
         await newApplication.save();
 
         res.status(201).json({

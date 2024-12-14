@@ -19,6 +19,7 @@ router.get('/', async (req, res) => {
     } = req.query;
 
     try {
+
         // 필터링 조건
         const query = {};
 
@@ -48,9 +49,21 @@ router.get('/', async (req, res) => {
             .skip((page - 1) * limit) // 페이지 건너뛰기
             .limit(parseInt(limit)); // 페이지 크기
 
+        // 조회된 문서들의 ID 목록 추출
+        const jobIds = jobs.map(job => job._id);
+
+        // 조회수 증가 (viewCount + 1)
+        if (jobIds.length > 0) {
+            await Job.updateMany(
+                { _id: { $in: jobIds } }, // 검색된 문서들
+                { $inc: { 조회수: 1 } } // 조회수 증가
+            );
+        }
+
         // 총 문서 수 계산
         const total = await Job.countDocuments(query);
 
+        
         // 결과 반환
         res.json({
             status: 'success',

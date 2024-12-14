@@ -15,7 +15,8 @@ app.use('/auth',require('./routes/Auth'))
 app.use('/applications',require('./routes/Application'))
 //Bookmark 관련 API
 app.use('/bookmarks',require('./routes/Bookmark'))
-
+//Company 관련 API
+app.use('/companies',require('./routes/Company'))
 // 서버 실행
 const PORT = 443;
 

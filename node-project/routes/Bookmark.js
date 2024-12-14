@@ -1,20 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middlewares/auth');
-const Bookmark = require('../mongoose/schemas/Bookmark');
+const Bookmark = require('../mongoose/schemas/User-Bookmark');
 
 // 북마크 추가/제거
 router.post('/', authMiddleware, async (req, res) => {
     const { 회사명, 링크 } = req.body;
-    const userId = req.user.id; // 인증된 사용자 ID
+    const { id: userId, 이름, 이메일 } = req.user; // 인증된 사용자 정보
 
-    // 요청 데이터 검증
     if (!회사명 || !링크) {
         return res.status(400).json({ status: 'error', message: '회사명과 링크는 필수 입력값입니다.' });
     }
 
     try {
-        // 기존 북마크 확인
         const existingBookmark = await Bookmark.findOne({ userId, 링크 });
 
         if (existingBookmark) {
@@ -23,14 +21,19 @@ router.post('/', authMiddleware, async (req, res) => {
             return res.json({ status: 'success', message: '북마크가 제거되었습니다.' });
         } else {
             // 북마크 추가
-            const newBookmark = new Bookmark({ userId, 회사명, 링크 });
+            const newBookmark = new Bookmark({
+                userId,
+                회사명,
+                링크,
+                사용자정보: { 이름, 이메일 }, // 사용자 정보 추가
+            });
+
             await newBookmark.save();
             return res.json({ status: 'success', message: '북마크가 추가되었습니다.', data: newBookmark });
         }
     } catch (err) {
         console.error('북마크 추가/제거 오류:', err.message);
 
-        // MongoDB 고유성 위반 에러 처리
         if (err.code === 11000) {
             return res.status(400).json({ status: 'error', message: '이미 북마크에 추가된 링크입니다.' });
         }
@@ -38,6 +41,7 @@ router.post('/', authMiddleware, async (req, res) => {
         res.status(500).json({ status: 'error', message: '서버 오류 발생' });
     }
 });
+
 
 // 북마크 목록 조회
 router.get('/', authMiddleware, async (req, res) => {
