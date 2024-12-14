@@ -165,4 +165,40 @@ router.put('/profile', authMiddleware, async (req, res) => {
     }
 });
 
+
+// 회원 정보 조회 (인증 필요)
+router.get('/profile', authMiddleware, async (req, res) => {
+    const userId = req.user.id; // JWT 인증에서 사용자 ID 가져오기
+
+    try {
+        const user = await User.findById(userId).select('-비밀번호 -refreshToken'); // 비밀번호 및 Refresh Token 제외
+        if (!user) {
+            return res.status(404).json({ status: 'error', message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        res.json({ status: 'success', data: user });
+    } catch (err) {
+        console.error('Error:', err.message);
+        res.status(500).json({ status: 'error', message: '서버 오류 발생' });
+    }
+});
+
+// 회원 탈퇴 (인증 필요)
+router.delete('/profile', authMiddleware, async (req, res) => {
+    const userId = req.user.id; // JWT 인증에서 사용자 ID 가져오기
+
+    try {
+        const user = await User.findByIdAndDelete(userId); // 사용자 삭제
+        if (!user) {
+            return res.status(404).json({ status: 'error', message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        res.json({ status: 'success', message: '회원 탈퇴가 완료되었습니다.' });
+    } catch (err) {
+        console.error('Error:', err.message);
+        res.status(500).json({ status: 'error', message: '서버 오류 발생' });
+    }
+});
+
+
 module.exports = router;
