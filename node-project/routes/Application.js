@@ -66,35 +66,26 @@ router.post('/', authMiddleware, async (req, res) => {
 });
 
 
-// 지원 취소
-router.delete('/', authMiddleware, async (req, res) => {
-    const { 회사명 } = req.body; // 요청 본문에서 회사명 가져오기
-    const userId = req.user.id; // 인증된 사용자 ID
+// 지원 정보 삭제 (완전 삭제)
+router.delete('/:id', authMiddleware, async (req, res) => {
+    const applicationId = req.params.id;
+    const userId = req.user.id;
 
     try {
-        // 지원 정보 조회
-        const application = await Application.findOne({ userId, 회사명 });
+        // 지원 정보 삭제
+        const deletedApplication = await Application.findOneAndDelete({ _id: applicationId, userId });
 
-        if (!application) {
+        if (!deletedApplication) {
             return res.status(404).json({ status: 'error', message: '지원 정보를 찾을 수 없습니다.' });
         }
 
-        // 상태 확인 (이미 취소된 경우)
-        if (application.상태 === '취소') {
-            return res.status(400).json({ status: 'error', message: '이미 취소된 지원입니다.' });
-        }
-
-        // 상태 업데이트
-        application.상태 = '취소';
-        await application.save();
-
         res.json({
             status: 'success',
-            message: '지원이 취소되었습니다.',
-            data: application
+            message: '지원 정보가 삭제되었습니다.',
+            data: deletedApplication
         });
     } catch (err) {
-        console.error('지원 취소 오류:', err.message);
+        console.error('지원 삭제 오류:', err.message);
         res.status(500).json({ status: 'error', message: '서버 오류 발생' });
     }
 });
