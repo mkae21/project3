@@ -83,6 +83,7 @@
 
 **패키지 설치 및 실행**
    ```bash
+   cd node-project
    npm install
    sudo node app.js
    ```

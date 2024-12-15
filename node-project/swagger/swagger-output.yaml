@@ -1,0 +1,673 @@
+openapi: "3.0.0"
+info:
+  version: "1.0.0"
+  title: "REST API"
+  description: "이 문서는 채용 공고 관리, 회원 인증, 지원 현황, 북마크, 기업 정보 조회 등을 제공하는 API에 대한 Swagger 문서입니다. 각 엔드포인트 별로 필요한 파라미터와 응답 형식을 한국어로 설명합니다."
+servers:
+  - url: "http://113.198.66.75:443"
+
+paths:
+  /jobs:
+    get:
+      description: "채용 공고 목록을 조회합니다..."
+      parameters:
+        - name: "page"
+          in: "query"
+          description: "페이지 번호 (기본값: 1)"
+          schema:
+            type: "string"
+        - name: "limit"
+          in: "query"
+          description: "페이지 당 표시할 공고 수 (기본값: 20)"
+          schema:
+            type: "string"
+        - name: "sortBy"
+          in: "query"
+          description: "정렬 기준 필드명 (기본값: createdAt)"
+          schema:
+            type: "string"
+        - name: "order"
+          in: "query"
+          description: "정렬 순서 (asc 또는 desc, 기본값: desc)"
+          schema:
+            type: "string"
+        - name: "지역"
+          in: "query"
+          description: "채용 공고의 지역 필터"
+          schema:
+            type: "string"
+        - name: "경력"
+          in: "query"
+          description: "경력 조건 필터 (예: 신입, 경력)"
+          schema:
+            type: "string"
+        - name: "minSalary"
+          in: "query"
+          description: "최소 연봉 필터"
+          schema:
+            type: "string"
+        - name: "maxSalary"
+          in: "query"
+          description: "최대 연봉 필터"
+          schema:
+            type: "string"
+        - name: "직무분야"
+          in: "query"
+          description: "직무 분야 필터 (쉼표로 구분 가능)"
+          schema:
+            type: "string"
+        - name: "keyword"
+          in: "query"
+          description: "키워드 검색 (회사명, 직무분야 등)"
+          schema:
+            type: "string"
+        - name: "회사명"
+          in: "query"
+          description: "회사명 검색"
+          schema:
+            type: "string"
+        - name: "제목"
+          in: "query"
+          description: "공고 제목 검색"
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "공고 조회 성공"
+        "500":
+          description: "서버 오류 발생"
+
+    post:
+      description: "새로운 채용 공고를 추가합니다."
+      requestBody:
+        description: "추가할 공고 정보"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              required: ["제목", "회사명", "링크", "마감일"]
+              properties:
+                "제목":
+                  type: "string"
+                  description: "공고 제목"
+                  example: "신입 백엔드 개발자 채용"
+                "회사명":
+                  type: "string"
+                  description: "회사명"
+                  example: "테크스타트업"
+                "지역":
+                  type: "string"
+                  description: "지역"
+                  example: "서울"
+                "경력":
+                  type: "string"
+                  description: "경력 요구사항"
+                  example: "신입"
+                "직무분야":
+                  type: "string"
+                  description: "직무 분야"
+                  example: "백엔드"
+                "연봉정보":
+                  type: "string"
+                  description: "연봉 정보"
+                  example: "면접 후 협의"
+                "조회수":
+                  type: "string"
+                  description: "초기 조회수 (옵션)"
+                  example: "0"
+                "마감일":
+                  type: "string"
+                  description: "공고 마감일"
+                  example: "2024-11-24"
+                "링크":
+                  type: "string"
+                  description: "링크 입력"
+                  example: "https://www.google.com"
+      responses:
+        "201":
+          description: "공고 생성 성공"
+        "500":
+          description: "서버 오류 발생"
+
+  /jobs/{id}:
+    get:
+      description: "특정 ID의 채용 공고 상세 정보를 조회합니다."
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          description: "조회할 공고의 ID"
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "공고 상세 조회 성공"
+        "404":
+          description: "공고를 찾을 수 없음"
+        "500":
+          description: "서버 오류 발생"
+    put:
+      description: "특정 ID의 채용 공고 정보를 수정합니다."
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "수정할 공고의 ID"
+      requestBody:
+        description: "수정할 공고 정보"
+        required: false
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                "제목":
+                  type: "string"
+                  description: "수정할 공고 제목(옵션)"
+                  example: "경력 백엔드 개발자 채용"
+                "회사명":
+                  type: "string"
+                  description: "회사명(옵션)"
+                  example: "테크스타트업"
+                "지역":
+                  type: "string"
+                  description: "지역(옵션)"
+                  example: "서울"
+                "경력":
+                  type: "string"
+                  description: "경력 요구사항(옵션)"
+                  example: "3년 이상"
+                "직무분야":
+                  type: "string"
+                  description: "직무 분야(옵션)"
+                  example: "백엔드"
+                "연봉정보":
+                  type: "string"
+                  description: "연봉 정보(옵션)"
+                  example: "연봉 4000~5000만원"
+                "조회수":
+                  type: "string"
+                  description: "조회수(옵션)"
+                  example: "100"
+      responses:
+        "200":
+          description: "공고 수정 성공"
+        "404":
+          description: "공고를 찾을 수 없음"
+        "500":
+          description: "서버 오류 발생"
+    delete:
+      description: "특정 ID의 공고를 삭제합니다."
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "삭제할 공고의 ID"
+      responses:
+        "200":
+          description: "공고 삭제 성공"
+        "404":
+          description: "공고를 찾을 수 없음"
+        "500":
+          description: "서버 오류 발생"
+
+  /auth/register:
+    post:
+      description: "사용자 회원가입을 수행합니다."
+      requestBody:
+        description: "회원가입 정보"
+        required: false
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                "이메일":
+                  type: "string"
+                  description: "사용자 이메일(로그인 ID)"
+                  example: "user@example.com"
+                "비밀번호":
+                  type: "string"
+                  description: "사용자 비밀번호"
+                  example: "password123"
+                "비밀번호확인":
+                  type: "string"
+                  description: "비밀번호 확인"
+                  example: "password123"
+                "이름":
+                  type: "string"
+                  description: "사용자 이름"
+                  example: "홍길동"
+      responses:
+        "201":
+          description: "회원 가입 성공"
+        "400":
+          description: "잘못된 요청(이미 가입된 이메일 또는 비밀번호 불일치)"
+        "500":
+          description: "서버 오류 발생"
+
+  /auth/login:
+    post:
+      description: "사용자 로그인을 수행합니다."
+      requestBody:
+        description: "로그인 정보"
+        required: false
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                "이메일":
+                  type: "string"
+                  description: "사용자 이메일"
+                  example: "user@example.com"
+                "비밀번호":
+                  type: "string"
+                  description: "사용자 비밀번호"
+                  example: "password123"
+      responses:
+        "200":
+          description: "로그인 성공 (Access Token, Refresh Token 반환)"
+        "400":
+          description: "이메일 또는 비밀번호가 올바르지 않음"
+        "500":
+          description: "서버 오류 발생"
+
+  /auth/refresh:
+    post:
+      description: "Refresh Token을 사용해 새로운 Access Token을 발급합니다."
+      requestBody:
+        description: "토큰 갱신 요청"
+        required: false
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                "refreshToken":
+                  type: "string"
+                  description: "유효한 Refresh Token"
+                  example: "재발급받은 refresh 토큰"
+      responses:
+        "200":
+          description: "Access Token 재발급 성공"
+        "400":
+          description: "Refresh 토큰 미제공 등 잘못된 요청"
+        "401":
+          description: "유효하지 않은 또는 만료된 Refresh Token"
+
+  /auth/profile:
+    put:
+      description: "사용자 프로필 정보를 수정합니다."
+      parameters:
+        - name: "Authorization"
+          in: "header"
+          schema:
+            type: "string"
+          description: "Bearer 토큰"
+      requestBody:
+        description: "프로필 수정 정보"
+        required: false
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                "이름":
+                  type: "string"
+                  description: "새로운 이름(옵션)"
+                  example: "김철수"
+                "비밀번호":
+                  type: "string"
+                  description: "새로운 비밀번호(옵션)"
+                  example: "newPassword123"
+      responses:
+        "200":
+          description: "프로필 수정 성공"
+        "401":
+          description: "인증 실패(토큰 없음 또는 무효)"
+        "404":
+          description: "사용자를 찾을 수 없음"
+        "500":
+          description: "서버 오류 발생"
+
+    get:
+      description: "현재 인증된 사용자의 프로필 정보를 조회합니다."
+      parameters:
+        - name: "Authorization"
+          in: "header"
+          schema:
+            type: "string"
+          description: "Bearer 토큰"
+      responses:
+        "200":
+          description: "프로필 조회 성공"
+        "401":
+          description: "인증 실패(토큰 없음 또는 무효)"
+        "404":
+          description: "사용자를 찾을 수 없음"
+        "500":
+          description: "서버 오류 발생"
+
+    delete:
+      description: "현재 인증된 사용자의 계정을 삭제합니다."
+      parameters:
+        - name: "Authorization"
+          in: "header"
+          schema:
+            type: "string"
+          description: "Bearer 토큰"
+      responses:
+        "200":
+          description: "회원 탈퇴 성공"
+        "401":
+          description: "인증 실패"
+        "404":
+          description: "사용자를 찾을 수 없음"
+        "500":
+          description: "서버 오류 발생"
+
+  /applications/:
+    get:
+      description: "현재 인증된 사용자의 지원 내역을 조회합니다."
+      parameters:
+        - name: "상태"
+          in: "query"
+          schema:
+            type: "string"
+          description: "지원 상태 필터 (예: 진행중, 합격, 불합격)"
+        - name: "정렬"
+          in: "query"
+          schema:
+            type: "string"
+          description: "정렬 순서 (asc 또는 desc)"
+        - name: "Authorization"
+          in: "header"
+          schema:
+            type: "string"
+          description: "Bearer 토큰"
+      responses:
+        "200":
+          description: "지원 내역 조회 성공"
+        "401":
+          description: "인증 실패"
+        "404":
+          description: "해당 지원 내역 없음"
+        "500":
+          description: "서버 오류 발생"
+
+    post:
+      description: "현재 인증된 사용자가 새로운 지원 정보를 추가합니다."
+      parameters:
+        - name: "Authorization"
+          in: "header"
+          schema:
+            type: "string"
+          description: "Bearer 토큰"
+      requestBody:
+        description: "지원 정보"
+        required: false
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                "회사명":
+                  type: "string"
+                  description: "지원한 회사명"
+                  example: "스타트업"
+                "링크":
+                  type: "string"
+                  description: "지원 링크"
+                  example: "http://example.com/apply"
+      responses:
+        "201":
+          description: "지원 정보 생성 성공"
+        "400":
+          description: "잘못된 요청(필수 정보 누락 또는 중복 지원)"
+        "401":
+          description: "인증 실패"
+        "404":
+          description: "대상 회사 없음"
+        "500":
+          description: "서버 오류 발생"
+
+  /applications/{id}:
+    delete:
+      description: "특정 지원 내역을 삭제합니다."
+      parameters:
+        - name: "id"
+          in: "path"
+          schema:
+            type: "string"
+          required: true
+          description: "삭제할 지원 내역 ID"
+        - name: "Authorization"
+          in: "header"
+          schema:
+            type: "string"
+          description: "Bearer 토큰"
+      responses:
+        "200":
+          description: "지원 정보 삭제 성공"
+        "401":
+          description: "인증 실패"
+        "404":
+          description: "지원 정보를 찾을 수 없음"
+        "500":
+          description: "서버 오류 발생"
+
+  /bookmarks/:
+    post:
+      description: "북마크 추가 또는 제거를 수행합니다."
+      parameters:
+        - name: "Authorization"
+          in: "header"
+          schema:
+            type: "string"
+          description: "Bearer 토큰"
+      requestBody:
+        description: "북마크 정보"
+        required: false
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                "회사명":
+                  type: "string"
+                  description: "북마크할 회사명"
+                  example: "유명 IT 기업"
+                "링크":
+                  type: "string"
+                  description: "북마크할 회사 링크"
+                  example: "http://example.com"
+      responses:
+        "200":
+          description: "북마크 추가/제거 성공"
+        "400":
+          description: "잘못된 요청(이미 등록된 북마크)"
+        "401":
+          description: "인증 실패"
+        "404":
+          description: "해당 회사 정보 없음"
+        "500":
+          description: "서버 오류 발생"
+
+    get:
+      description: "사용자의 북마크 목록을 조회합니다."
+      parameters:
+        - name: "page"
+          in: "query"
+          schema:
+            type: "string"
+          description: "페이지 번호 (기본값: 1)"
+        - name: "limit"
+          in: "query"
+          schema:
+            type: "string"
+          description: "페이지 당 표시할 개수 (기본값: 10)"
+        - name: "Authorization"
+          in: "header"
+          schema:
+            type: "string"
+          description: "Bearer 토큰"
+      responses:
+        "200":
+          description: "북마크 목록 조회 성공"
+        "401":
+          description: "인증 실패"
+        "404":
+          description: "북마크 없음"
+        "500":
+          description: "서버 오류 발생"
+
+  /companies/:
+    get:
+      description: "회사 목록을 조회합니다."
+      parameters:
+        - name: "지역"
+          in: "query"
+          schema:
+            type: "string"
+          description: "회사 지역 필터"
+        - name: "직무분야"
+          in: "query"
+          schema:
+            type: "string"
+          description: "직무 분야 필터"
+        - name: "회사명"
+          in: "query"
+          schema:
+            type: "string"
+          description: "회사명 검색(부분 검색 지원)"
+      responses:
+        "200":
+          description: "회사 목록 조회 성공"
+        "500":
+          description: "서버 오류 발생"
+
+    post:
+      description: "새로운 회사 정보를 추가합니다."
+      requestBody:
+        description: "회사 정보"
+        required: false
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                "회사명":
+                  type: "string"
+                  description: "회사명"
+                  example: "신규 스타트업"
+                "링크":
+                  type: "string"
+                  description: "회사 홈페이지 링크"
+                  example: "http://company.com"
+                "지역":
+                  type: "string"
+                  description: "회사 지역"
+                  example: "부산"
+                "직무분야":
+                  type: "string"
+                  description: "주요 직무 분야"
+                  example: "프론트엔드"
+                "연봉정보":
+                  type: "string"
+                  description: "연봉 정보(옵션)"
+                  example: "연봉 3000~4000만원"
+      responses:
+        "201":
+          description: "회사 추가 성공"
+        "400":
+          description: "잘못된 요청(필수 정보 누락 또는 중복)"
+        "500":
+          description: "서버 오류 발생"
+
+  /companies/{id}:
+    get:
+      description: "특정 ID의 회사 상세 정보를 조회합니다."
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "조회할 회사의 ID"
+      responses:
+        "200":
+          description: "회사 상세 조회 성공"
+        "404":
+          description: "회사를 찾을 수 없음"
+        "500":
+          description: "서버 오류 발생"
+
+    put:
+      description: "특정 ID의 회사 정보를 수정합니다."
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "수정할 회사의 ID"
+      requestBody:
+        description: "회사 수정 정보"
+        required: false
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                "회사명":
+                  type: "string"
+                  description: "회사명(옵션)"
+                  example: "업데이트된 기업명"
+                "링크":
+                  type: "string"
+                  description: "회사 링크(옵션)"
+                  example: "http://newcompany.com"
+                "지역":
+                  type: "string"
+                  description: "지역(옵션)"
+                  example: "대구"
+                "직무분야":
+                  type: "string"
+                  description: "직무 분야(옵션)"
+                  example: "풀스택"
+                "연봉정보":
+                  type: "string"
+                  description: "연봉 정보(옵션)"
+                  example: "연봉 4000~5000만원"
+      responses:
+        "200":
+          description: "회사 정보 수정 성공"
+        "400":
+          description: "잘못된 요청(중복 등)"
+        "404":
+          description: "회사를 찾을 수 없음"
+        "500":
+          description: "서버 오류 발생"
+
+    delete:
+      description: "특정 ID의 회사를 삭제합니다."
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "삭제할 회사의 ID"
+      responses:
+        "200":
+          description: "회사 삭제 성공"
+        "404":
+          description: "회사를 찾을 수 없음"
+        "500":
+          description: "서버 오류 발생"

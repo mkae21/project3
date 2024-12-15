@@ -2,6 +2,8 @@ const express = require('express');
 const app = express();
 const mongodb = require('./mongoose/index');
 
+app.use(express.json()); // JSON 요청 데이터 처리
+
 require('dotenv').config(); // .env 파일 로드 -> jwt 인증 환경 변수
 
 // Swagger Autogen 파일 import
@@ -14,7 +16,6 @@ mongodb.connect();
 // Swagger UI 연결
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerFile, { explorer: true }));
 
-app.use(express.json()); // JSON 요청 데이터 처리
 
 // 채용 공고 관련 API
 app.use('/jobs', require('./routes/Jobs'));
