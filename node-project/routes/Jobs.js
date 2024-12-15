@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Job = require('../mongoose/schemas/Job');
 
+
 router.get('/', async (req, res) => {
     const {
         page = 1,
@@ -121,10 +122,17 @@ router.get('/:id', async (req, res) => {
 
 //공고 추가
 router.post('/', async (req, res) => {
-    const { 제목, 회사명, 지역, 경력, 직무분야, 연봉정보,조회수 } = req.body;
+    console.log(req.body); // 요청 데이터를 출력
+    const { 제목,회사명,지역,경력,직무분야,연봉정보,조회수,마감일,링크 } = req.body;
 
     try {
-        const newJob = new Job({ 제목, 회사명, 지역, 경력, 직무분야, 연봉정보 });
+        //추가
+        const existingJob = await Job.findOne({ 링크: req.body.링크 });
+        if (existingJob) {
+            return res.status(400).json({ status: 'error', message: '링크가 이미 존재합니다.' });
+        }
+
+        const newJob = new Job({제목,회사명,지역,경력,직무분야,연봉정보,조회수,마감일,링크});
         await newJob.save();
         res.status(201).json({ status: 'success', data: newJob });
     } catch (err) {

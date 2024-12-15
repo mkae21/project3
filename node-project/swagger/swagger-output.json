@@ -1,14 +1,14 @@
 {
-  "swagger": "2.0",
+  "openapi": "3.0.0",
   "info": {
     "version": "1.0.0",
     "title": "REST API",
     "description": "이 문서는 채용 공고 관리, 회원 인증, 지원 현황, 북마크, 기업 정보 조회 등을 제공하는 API에 대한 Swagger 문서입니다. 각 엔드포인트 별로 필요한 파라미터와 응답 형식을 한국어로 설명합니다."
   },
   "host": "113.198.66.75:443",
-  "basePath": "/",
+  "basePath": "/v1",
   "schemes": [
-    "https"
+    "http"
   ],
   "paths": {
     "/jobs": {
@@ -109,11 +109,13 @@
               "properties": {
                 "제목": {
                   "example": "신입 백엔드 개발자 채용",
-                  "description": "공고 제목"
+                  "description": "공고 제목",
+                  "required":true
                 },
                 "회사명": {
                   "example": "테크스타트업",
-                  "description": "회사명"
+                  "description": "회사명",
+                  "required":true
                 },
                 "지역": {
                   "example": "서울",
@@ -134,6 +136,16 @@
                 "조회수": {
                   "example": "0",
                   "description": "초기 조회수 (옵션)"
+                },
+                "마감일": {
+                  "example": "2024-11-24",
+                  "description": "공고 마감일",
+                  "required":true
+                },
+                "링크": {
+                  "example": "https://www.google.com",
+                  "description": "링크 입력",
+                  "required":true
                 }
               }
             }
